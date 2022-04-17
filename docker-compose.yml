@@ -4,7 +4,6 @@ services:
     depends_on:
       - mysqldb
     build: ./back-end
-    restart: always
     container_name: back-end
     env_file: ./.env
     ports:
@@ -17,12 +16,6 @@ services:
       - DB_PORT=$MYSQLDB_DOCKER_PORT
     stdin_open: true
     tty: true
-  front-end: 
-    build: ./front-end
-    container_name: front-end-cash-book
-    ports:
-      - $REACT_LOCAL_PORT:$REACT_DOCKER_PORT
-
   mysqldb:
     image: mysql
     container_name: mysql-cash-book
@@ -34,19 +27,20 @@ services:
     ports:
       - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
     volumes:
-      - db:/var/lib/mysql
-      - ./mycustom.cnf:/etc/mysql/conf.d/custom.cnf
-      - ./cash_book_db.sql:/docker-entrypoint-initdb.d/cash_book_db.sql
+      - mysql:/var/lib/mysql
+      - ./back-end/cash_book_db.sql:/docker-entrypoint-initdb.d/cash_book_db.sql
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
+    restart: always
     container_name: phpmyadmin-cash-book
     ports:
       - $PHPMYADMIN_LOCAL_PORT:$PHPMYADMIN_DOCKER_PORT 
-    environment:  
-      - PMA_USER= $PHPMYADMIN_USER
-      - PMA_PASSWORD= $PHPMYADMIN_PASSWORD
-      - PMA_HOST= mysqldb
-    depends_on:
-      - mysqldb
+    environment: 
+      - PMA_ARBITRARY:1
+      - PMA_HOST=mysqldb 
+      - MYSQL_USERNAME=$PHPMYADMIN_USER
+      - MYSQL_ROOT_PASSWORD=$PHPMYADMIN_PASSWORD
+      
 volumes: 
-  db:
+  mysql:
